@@ -5,13 +5,16 @@ verify_ssl = true
 
 [dev-packages]
 pylint = "*"
+autopep8 = "*"
 
 [packages]
-psycopg2 = "*"
 Flask = "*"
-Flask-Session = "*"
-SQLAlchemy = "*"
 flask-migrate = "*"
+flask-sqlalchemy = "*"
+psycopg2 = "*"
+flask-httpauth = "*"
+itsdangerous = "*"
+passlib = {extras = ["bcrypt"],version = "*"}
 
 [requires]
 python_version = "3.7"

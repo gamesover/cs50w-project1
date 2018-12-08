@@ -1,9 +1,10 @@
+from models import User, Book
 import os
 
-from flask import Flask, session
-from flask_session import Session
-from sqlalchemy import create_engine
-from sqlalchemy.orm import scoped_session, sessionmaker
+from flask import Flask, abort, request, jsonify, g, url_for
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
+from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth, MultiAuth
 
 app = Flask(__name__)
 
@@ -11,16 +12,54 @@ app = Flask(__name__)
 if not os.getenv("DATABASE_URL"):
     raise RuntimeError("DATABASE_URL is not set")
 
-# Configure session to use filesystem
-app.config["SESSION_PERMANENT"] = False
-app.config["SESSION_TYPE"] = "filesystem"
-Session(app)
-
 # Set up database
-engine = create_engine(os.getenv("DATABASE_URL"))
-db = scoped_session(sessionmaker(bind=engine))
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
+app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+
+auth = HTTPTokenAuth()
 
 
-@app.route("/")
-def index():
-    return "Project 1: TODO"
+@auth.verify_token
+def verify_token(token):
+    user = User.verify_auth_token(token)
+    if not user:
+        return False
+    g.user = user
+    return True
+
+
+@app.route('/users', methods=['POST'])
+def new_user():
+    username = request.json.get('username')
+    password = request.json.get('password')
+    if username is None or password is None:
+        abort(400)    # missing arguments
+    if User.query.filter_by(username=username).first() is not None:
+        abort(400)    # existing user
+    user = User(username=username)
+    user.hash_password(password)
+    db.session.add(user)
+    db.session.commit()
+    return jsonify({'username': user.username, 'id': user.id}), 201
+
+
+@app.route('/login')
+def login():
+    username = request.json.get('username')
+    password = request.json.get('password')
+    user = User.query.filter_by(username=username).first()
+
+    if user and user.verify_password(password):
+        g.user = user
+        token = g.user.generate_auth_token(600)
+        return jsonify({'token': token.decode('ascii'), 'duration': 600})
+    else:
+        abort(401)
+
+
+@app.route('/api/resource')
+@auth.login_required
+def get_resource():
+    return jsonify({'data': 'Hello, %s!' % g.user.username})
