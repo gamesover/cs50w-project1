@@ -1,4 +1,3 @@
-from models import User, Book
 import os
 
 from flask import Flask, abort, request, jsonify, g, url_for
@@ -16,6 +15,9 @@ if not os.getenv("DATABASE_URL"):
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 db = SQLAlchemy(app)
+
+from models import User, Book
+
 migrate = Migrate(app, db)
 
 auth = HTTPTokenAuth()
@@ -45,7 +47,7 @@ def new_user():
     return jsonify({'username': user.username, 'id': user.id}), 201
 
 
-@app.route('/login')
+@app.route('/login', methods=['POST'])
 def login():
     username = request.json.get('username')
     password = request.json.get('password')
