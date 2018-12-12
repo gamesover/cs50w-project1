@@ -3,7 +3,8 @@ import os
 from flask import Flask, abort, request, jsonify, g, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
-from flask_httpauth import HTTPBasicAuth, HTTPTokenAuth, MultiAuth
+from flask_httpauth import HTTPTokenAuth
+from elasticsearch import Elasticsearch
 
 app = Flask(__name__)
 
@@ -14,6 +15,7 @@ if not os.getenv("DATABASE_URL"):
 # Set up database
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
 app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
+app.config['ELASTICSEARCH_URL'] = os.getenv("ELASTICSEARCH_URL")
 db = SQLAlchemy(app)
 
 from models import User, Book
@@ -21,7 +23,8 @@ from models import User, Book
 migrate = Migrate(app, db)
 
 auth = HTTPTokenAuth()
-
+es = Elasticsearch()
+app.elasticsearch = Elasticsearch([app.config['ELASTICSEARCH_URL']]) if app.config['ELASTICSEARCH_URL'] else None
 
 @auth.verify_token
 def verify_token(token):
@@ -44,7 +47,9 @@ def new_user():
     user.hash_password(password)
     db.session.add(user)
     db.session.commit()
-    return jsonify({'username': user.username, 'id': user.id}), 201
+    g.user = user
+    token = g.user.generate_auth_token(600)
+    return jsonify({'token': token.decode('ascii'), 'duration': 600})
 
 
 @app.route('/login', methods=['POST'])
@@ -65,3 +70,13 @@ def login():
 @auth.login_required
 def get_resource():
     return jsonify({'data': 'Hello, %s!' % g.user.username})
+
+@app.route('/search', methods=['POST'])
+def search():
+    search = request.json.get('search')
+    page = request.json.get('page')
+    per_page = request.json.get('per_page')
+ 
+    query, total = Book.search(search, page, per_page)
+ 
+    return jsonify(books=[book.serialize for book in query.all()])

@@ -3,6 +3,3 @@
 
 # caches
 __pycache__
-
-# sessions
-/flask_session

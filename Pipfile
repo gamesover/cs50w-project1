@@ -11,10 +11,11 @@ autopep8 = "*"
 Flask = "*"
 flask-migrate = "*"
 flask-sqlalchemy = "*"
-psycopg2 = "*"
 flask-httpauth = "*"
 itsdangerous = "*"
 passlib = {extras = ["bcrypt"],version = "*"}
+elasticsearch = "*"
+psycopg2-binary = "*"
 
 [requires]
 python_version = "3.7"

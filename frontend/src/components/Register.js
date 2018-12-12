@@ -2,12 +2,13 @@ import React from 'react'
 import { connect } from 'react-redux'
 import { Container, Form, FormGroup, Label, Input, Button } from 'reactstrap'
 import { setToken } from '../actions'
+import {postApi} from '../services/Api'
 
 const mapDispatchToProps = (dispatch) => ({
   setToken: (token) => dispatch(setToken(token))
 })
 
-class Login extends React.Component {
+class Register extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -25,18 +26,11 @@ class Login extends React.Component {
   }
 
   handleSubmit = () => {
-    fetch('/login', {
-      method: 'post',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        username: this.state.username,
-        password: this.state.password
-      })
-    })
-    .then(response => response.json())
+    const params = {
+      'username': this.state.username,
+      'password': this.state.password
+    }
+    postApi('/users', params)
     .then(data => {
       this.props.setToken(data.token)
     })
@@ -44,8 +38,8 @@ class Login extends React.Component {
 
   render() {
     return (
-      <Container className="login">
-        <h2>Login</h2>
+      <Container className="register">
+        <h2>Register</h2>
         <Form>
           <FormGroup>
             <Label>Username</Label>
@@ -55,7 +49,7 @@ class Login extends React.Component {
             <Label>password</Label>
             <Input type="password" name="password" value={this.state.password} onChange={this.handleChangePassword} />
           </FormGroup>
-          <Button onClick={this.handleSubmit}>Login</Button>
+          <Button onClick={this.handleSubmit}>Register</Button>
         </Form>
       </Container>
     )
@@ -65,4 +59,4 @@ class Login extends React.Component {
 export default connect(
   null,
   mapDispatchToProps
-)(Login)
+)(Register)

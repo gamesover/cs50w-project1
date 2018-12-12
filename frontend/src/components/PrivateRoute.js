@@ -1,11 +1,11 @@
 import React from 'react'
 import { Redirect, Route } from 'react-router-dom'
-import store from '../store'
+import {getToken} from '../services/Token'
 
 const PrivateRoute = ({ component: Component, ...rest }) => {
 
   // Add your own authentication on the below line.
-  const isLoggedIn = store.getState().token
+  const isLoggedIn = getToken()
 
   return (
     <Route
