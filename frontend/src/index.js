@@ -6,7 +6,8 @@ import store from './store';
 import * as serviceWorker from './serviceWorker';
 
 import './index.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/css/bootstrap.min.css'
+import 'font-awesome/css/font-awesome.min.css'
 
 render(
   <Provider store={store}>

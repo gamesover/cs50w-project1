@@ -17,7 +17,10 @@ def remove_from_index(index, model):
 def query_index(index, query, page, per_page):
     if not current_app.elasticsearch:
         return [], 0
-    body={'query': {'multi_match': {'query': query, 'fields': ['*'], "lenient": 'true'}}}
+    if query:    
+        body={'size': 10000, 'query': {'multi_match': {'query': query, 'fields': ['*'], "lenient": 'true'}}}
+    else:
+        body={'size': 10000, 'query': {"match_all" : {}}}
 
     if page and per_page:
         body = {**body, 'from': (page - 1) * per_page, 'size': per_page}      

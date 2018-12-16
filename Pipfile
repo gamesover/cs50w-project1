@@ -16,6 +16,8 @@ itsdangerous = "*"
 passlib = {extras = ["bcrypt"],version = "*"}
 elasticsearch = "*"
 psycopg2-binary = "*"
+requests = "*"
+submit50 = "*"
 
 [requires]
 python_version = "3.7"

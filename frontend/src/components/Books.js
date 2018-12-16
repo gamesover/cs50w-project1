@@ -1,28 +1,30 @@
 import React from 'react'
 import { connect } from 'react-redux'
 import { Container, Form, FormGroup, Label, Input, Button } from 'reactstrap'
-
-import {postApi} from '../services/Api'
+import BooksTable from './BooksTable'
+import {getApi} from '../services/Api'
 
 class Books extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      search: ''
+      search: '',
+      books: [],
+      displayTable: false
     }
   }
 
   handleChangeSearch = (event) => {
-    this.setState({ search: event.target.value });
+    this.setState({ search: event.target.value })
   }
 
   handleSearch = () => {
     const params = {
       'search': this.state.search,
     }
-    postApi('/books', params)
+    getApi('/books', params)
     .then(data => {
-      this.props.setToken(data.token)
+      this.setState({ books: data.books, displayTable: true });
     })
   }
 
@@ -39,6 +41,10 @@ class Books extends React.Component {
           <Button color="primary" onClick={this.handleSearch} >Search</Button>
           </div>
         </Form>
+
+      {
+        this.state.displayTable && <BooksTable books={this.state.books} />
+      }
       </Container>
     )
   }

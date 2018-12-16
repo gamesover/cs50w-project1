@@ -1,11 +1,8 @@
-import $ from 'jquery'
 import { getToken } from './Token'
 
-const token = getToken()
-
 export function getApi(url, params) {
-  // const token = getToken()
-  const targetUrl = params ? `${url}?${$.params(params)}` : url
+  const token = getToken()
+  const targetUrl = params ? `${url}?${objToParams(params)}` : url
   const getParams = {
     headers: {
       'Authorization': `Bearer ${token}`
@@ -16,8 +13,12 @@ export function getApi(url, params) {
     .then(response => response.json())
 }
 
-export function postApi(url, params = {}) {
+function objToParams(params) {
+  return Object.entries(params).map(([key, val]) => `${key}=${encodeURIComponent(val)}`).join('&')
+}
 
+export function postApi(url, params = {}) {
+  const token = getToken()
   const postParams = {
     method: 'post',
     headers: {

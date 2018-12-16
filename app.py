@@ -18,7 +18,7 @@ app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 app.config['ELASTICSEARCH_URL'] = os.getenv("ELASTICSEARCH_URL")
 db = SQLAlchemy(app)
 
-from models import User, Book
+from models import User, Book, Review
 
 migrate = Migrate(app, db)
 
@@ -71,12 +71,50 @@ def login():
 def get_resource():
     return jsonify({'data': 'Hello, %s!' % g.user.username})
 
-@app.route('/search', methods=['POST'])
-def search():
-    search = request.json.get('search')
-    page = request.json.get('page')
-    per_page = request.json.get('per_page')
- 
-    query, total = Book.search(search, page, per_page)
+@app.route('/books')
+def books():
+    search = request.args.get('search') 
+    query, _total = Book.search(search)
  
     return jsonify(books=[book.serialize for book in query.all()])
+
+@app.route('/books/<int:id>')
+@auth.login_required
+def book(id):
+    book = Book.query.filter_by(id=id).first()
+    if not book:
+        abort(404)
+    goodreads_rating_stat = book.goodreads_rating_stat()
+    return jsonify(
+        book=book.serialize, 
+        reviews=[review.serialize for review in book.reviews],
+        goodreads_rating_stat=goodreads_rating_stat,
+        is_commented=book.is_commented(user=g.user)
+        )
+
+@app.route('/books/<int:id>/reviews', methods=['POST'])
+@auth.login_required
+def reviews(id):
+    book = Book.query.filter_by(id=id).first()
+    comment = request.json.get('comment')
+    rating = request.json.get('rating')
+    Review(comment=comment, rating=rating, user=g.user, book=book)
+    db.session.commit()
+
+    return jsonify(reviews=[review.serialize for review in book.reviews])
+
+
+@app.route('/api/<string:isbn>')
+def api_book(isbn):
+    book = Book.query.filter_by(isbn=isbn).first()
+    if not book:
+        abort(404)
+
+    review_count = db.session.query(Review).filter(Review.book==book).count()
+    average_score = book.average_rating()
+
+    book_json = book.serialize
+    book_json['review_count'] = review_count
+    book_json['average_score'] = average_score
+
+    return jsonify(book_json)

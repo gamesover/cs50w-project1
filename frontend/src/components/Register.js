@@ -1,6 +1,7 @@
 import React from 'react'
 import { connect } from 'react-redux'
 import { Container, Form, FormGroup, Label, Input, Button } from 'reactstrap'
+import { Redirect } from 'react-router-dom'
 import { setToken } from '../actions'
 import {postApi} from '../services/Api'
 
@@ -13,7 +14,8 @@ class Register extends React.Component {
     super(props);
     this.state = {
       username: '',
-      password: ''
+      password: '',
+      redirectToBooks: false
     }
   }
 
@@ -33,10 +35,13 @@ class Register extends React.Component {
     postApi('/users', params)
     .then(data => {
       this.props.setToken(data.token)
+      this.setState({ redirectToBooks: true })
     })
   }
 
   render() {
+    if (this.state.redirectToBooks) return <Redirect to='/books' />
+
     return (
       <Container className="register">
         <h2>Register</h2>

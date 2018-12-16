@@ -5,14 +5,16 @@ import Home from './Home'
 import Login from './Login'
 import Register from './Register'
 import Books from './Books'
+import Book from './Book'
 
 const App = () => (
     <Router>
       <Switch>
-        <Route exact path="/" component={Home} />
         <Route path="/register" component={Register} />
         <Route path="/login" component={Login} />
-        <Route path="/books" component={Books} />
+        <PrivateRoute path="/books/:id" component={Book} />
+        <PrivateRoute path="/books" component={Books} />
+        <Route path="/" component={Home} />
       </Switch>
     </Router>
 )
